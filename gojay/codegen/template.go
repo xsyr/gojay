@@ -13,6 +13,8 @@ const (
 	encodeBaseTypeSlice
 	decodeRawType
 	encodeRawType
+	decodeByteSliceAsString
+	encodeByteSliceAsString
 	decodeStruct
 	encodeStruct
 
@@ -43,6 +45,8 @@ var fieldTemplate = map[int]string{
 {{else}} 		return dec.{{.DecodingMethod}}(&{{.Accessor}}){{end}}
 `,
 	encodeBaseType: `    enc.{{.EncodingMethod}}Key{{.OmitEmpty}}("{{.Key}}", {{.DereferenceModifier}}{{.Accessor}})`,
+
+	encodeByteSliceAsString: `    enc.StringKey{{.OmitEmpty}}("{{.Key}}", string({{.DereferenceModifier}}{{.Accessor}}))`,
 
 	decodeBaseTypeSlice: `		case "{{.Key}}":
 			var aSlice = {{.HelperType}}{}

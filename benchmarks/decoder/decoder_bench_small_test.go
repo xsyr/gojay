@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/buger/jsonparser"
-	"github.com/francoispqt/gojay"
-	"github.com/francoispqt/gojay/benchmarks"
+	"github.com/xsyr/gojay"
+	"github.com/xsyr/gojay/benchmarks"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mailru/easyjson"
 )

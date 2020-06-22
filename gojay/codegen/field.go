@@ -3,6 +3,7 @@ package codegen
 import (
 	"fmt"
 	"github.com/viant/toolbox"
+	"reflect"
 	"strings"
 )
 
@@ -42,6 +43,7 @@ type Field struct {
 	IsAnonymous     bool
 	IsPointer       bool
 	IsSlice         bool
+	ByteSliceAsStr  bool
 
 	GojayMethod string
 }
@@ -84,17 +86,25 @@ func NewField(owner *Struct, field *toolbox.FieldInfo, fieldType *toolbox.TypeIn
 		result.HelperType = getSliceHelperTypeName(fieldType.Name, field.IsPointerComponent)
 	}
 
-	if options := getTagOptions(field.Tag, "timeLayout"); len(options) > 0 {
+	var fieldTag string
+	var structTag = reflect.StructTag(strings.Replace(field.Tag, "`", "", len(field.Tag)))
+	if tag, ok := structTag.Lookup(owner.options.TagName); ok {
+		fieldTag = tag
+	}
+
+	if options := getTagOptions(fieldTag, "timeLayout"); len(options) > 0 {
 		result.TimeLayout = wrapperIfNeeded(options[0], `"`)
-	} else if options := getTagOptions(field.Tag, "timeFormat"); len(options) > 0 {
+	} else if options := getTagOptions(fieldTag, "timeFormat"); len(options) > 0 {
 		result.TimeLayout = wrapperIfNeeded(toolbox.DateFormatToLayout(options[0]), `"`)
 	}
-	if strings.Contains(field.Tag, "omitempty") {
+	if strings.Contains(fieldTag, "omitempty") {
 		result.OmitEmpty = "OmitEmpty"
 	}
-	if strings.Contains(field.Tag, "nullempty") {
+	if strings.Contains(fieldTag, "nullempty") {
 		result.OmitEmpty = "NullEmpty"
 	}
+
+	result.ByteSliceAsStr = strings.Contains(fieldTag, "encstring")
 
 	if owner.options.PoolObjects {
 		if field.IsPointer && !strings.HasSuffix(field.TypeName, ".Time") && !strings.Contains(field.TypeName, "sql.Null") {

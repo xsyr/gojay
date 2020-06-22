@@ -259,6 +259,9 @@ func (s *Struct) generateFieldEncoding(fields []*toolbox.FieldInfo) ([]string, e
 			s.generatePrimitiveArray(field)
 		case "[]byte":
 			templateKey = encodeRawType
+			if field.ByteSliceAsStr {
+				templateKey = encodeByteSliceAsString
+			}
 		default:
 			if fieldTypeInfo != nil {
 				if !(field.IsSlice || fieldTypeInfo.IsSlice) {
