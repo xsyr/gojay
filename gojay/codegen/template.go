@@ -13,10 +13,17 @@ const (
 	encodeBaseTypeSlice
 	decodeRawType
 	encodeRawType
+
 	decodeByteSliceAsString
 	encodeByteSliceAsString
+
 	decodeStruct
+	decodeAsBuffer
+	decodeAsBufferString
+
 	encodeStruct
+	encodeAsBuffer
+	encodeAsBufferString
 
 	decodeStructSlice
 	encodeStructSlice
@@ -81,7 +88,31 @@ var fieldTemplate = map[int]string{
 {{end}}
 			return err
 `,
+	decodeAsBuffer: `		case "{{.Key}}":{{if .IsPointer}}
+			var value = {{.Init}}
+			err := dec.Object(value)
+			if err == nil {
+				{{.Mutator}} = value
+			}
+{{else}}
+			err := dec.Object(&{{.Mutator}})
+{{end}}
+			return err
+`,
+	decodeAsBufferString: `		case "{{.Key}}":{{if .IsPointer}}
+			var value = {{.Init}}
+			err := dec.BufferString(value)
+			if err == nil {
+				{{.Mutator}} = value
+			}
+{{else}}
+			err := dec.Object(&{{.Mutator}})
+{{end}}
+			return err
+`,
 	encodeStruct: `    enc.ObjectKey{{.OmitEmpty}}("{{.Key}}", {{.PointerModifier}}{{.Accessor}})`,
+	encodeAsBuffer: `    enc.ObjectKey{{.OmitEmpty}}("{{.Key}}", {{.PointerModifier}}{{.Accessor}})`,
+	encodeAsBufferString: `    enc.BufferStringKey{{.OmitEmpty}}("{{.Key}}", {{.PointerModifier}}{{.Accessor}})`,
 
 	decodeStructSlice: `		case "{{.Key}}":
 			   var aSlice = {{.HelperType}}{}

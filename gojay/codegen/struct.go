@@ -152,8 +152,14 @@ func (s *Struct) generateFieldDecoding(fields []*toolbox.FieldInfo) (string, []s
 
 			if fieldTypeInfo != nil {
 				if !(field.IsSlice || fieldTypeInfo.IsSlice) {
-
-					templateKey = decodeStruct
+					if field.AsBuffer {
+						templateKey = decodeAsBuffer
+						if field.AsString {
+							templateKey = decodeAsBufferString
+						}
+					} else {
+						templateKey = decodeStruct
+					}
 					break main
 				}
 
@@ -259,13 +265,20 @@ func (s *Struct) generateFieldEncoding(fields []*toolbox.FieldInfo) ([]string, e
 			s.generatePrimitiveArray(field)
 		case "[]byte":
 			templateKey = encodeRawType
-			if field.ByteSliceAsStr {
+			if field.AsString {
 				templateKey = encodeByteSliceAsString
 			}
 		default:
 			if fieldTypeInfo != nil {
 				if !(field.IsSlice || fieldTypeInfo.IsSlice) {
-					templateKey = encodeStruct
+					if field.AsBuffer {
+						templateKey = encodeAsBuffer
+						if field.AsString {
+							templateKey = encodeAsBufferString
+						}
+					} else {
+						templateKey = encodeStruct
+					}
 					break main
 				}
 				switch fieldTypeInfo.ComponentType {

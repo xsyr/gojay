@@ -43,7 +43,9 @@ type Field struct {
 	IsAnonymous     bool
 	IsPointer       bool
 	IsSlice         bool
-	ByteSliceAsStr  bool
+	AsString        bool
+	AsBuffer        bool
+	BufferCtor      string
 
 	GojayMethod string
 }
@@ -89,7 +91,10 @@ func NewField(owner *Struct, field *toolbox.FieldInfo, fieldType *toolbox.TypeIn
 	var fieldTag string
 	var structTag = reflect.StructTag(strings.Replace(field.Tag, "`", "", len(field.Tag)))
 	if tag, ok := structTag.Lookup(owner.options.TagName); ok {
-		fieldTag = tag
+		tokens := strings.Split(tag, ",")
+		if len(tokens) > 1 {
+			fieldTag = strings.Join(tokens[1:], ",")
+		}
 	}
 
 	if options := getTagOptions(fieldTag, "timeLayout"); len(options) > 0 {
@@ -104,7 +109,22 @@ func NewField(owner *Struct, field *toolbox.FieldInfo, fieldType *toolbox.TypeIn
 		result.OmitEmpty = "NullEmpty"
 	}
 
-	result.ByteSliceAsStr = strings.Contains(fieldTag, "encstring")
+	result.AsString = strings.Contains(fieldTag, "string")
+	result.AsBuffer = strings.Contains(fieldTag, "buffer")
+	for _, opt := range strings.Split(fieldTag, ",") {
+		if opt == "string" {
+			result.AsString = true
+		} else if strings.HasPrefix(fieldTag, "buffer") {
+			result.AsBuffer = true
+			tokens := strings.Split(opt, "@")
+			if len(tokens) > 1 {
+				args := strings.Split(tokens[1], "=")
+				if len(args) == 2 && args[0] == "ctor" {
+					result.Init = args[1]
+				}
+			}
+		}
+	}
 
 	if owner.options.PoolObjects {
 		if field.IsPointer && !strings.HasSuffix(field.TypeName, ".Time") && !strings.Contains(field.TypeName, "sql.Null") {
