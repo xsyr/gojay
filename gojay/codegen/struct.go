@@ -150,16 +150,17 @@ func (s *Struct) generateFieldDecoding(fields []*toolbox.FieldInfo) (string, []s
 			templateKey = decodeRawType
 		default:
 
+			if field.AsBuffer {
+				templateKey = decodeAsBuffer
+				if field.AsString {
+					templateKey = decodeAsBufferString
+				}
+				break main
+			}
+
 			if fieldTypeInfo != nil {
 				if !(field.IsSlice || fieldTypeInfo.IsSlice) {
-					if field.AsBuffer {
-						templateKey = decodeAsBuffer
-						if field.AsString {
-							templateKey = decodeAsBufferString
-						}
-					} else {
-						templateKey = decodeStruct
-					}
+					templateKey = decodeStruct
 					break main
 				}
 
@@ -204,6 +205,7 @@ func (s *Struct) generateFieldDecoding(fields []*toolbox.FieldInfo) (string, []s
 				return "", nil, fmt.Errorf("Unknown type %s for field %s", field.Type, field.Name)
 			}
 		}
+
 		if templateKey != -1 {
 			decodingCase, err := expandFieldTemplate(templateKey, field)
 			if err != nil {
@@ -269,16 +271,17 @@ func (s *Struct) generateFieldEncoding(fields []*toolbox.FieldInfo) ([]string, e
 				templateKey = encodeByteSliceAsString
 			}
 		default:
+			if field.AsBuffer {
+				templateKey = encodeAsBuffer
+				if field.AsString {
+					templateKey = encodeAsBufferString
+				}
+				break main
+			}
+
 			if fieldTypeInfo != nil {
 				if !(field.IsSlice || fieldTypeInfo.IsSlice) {
-					if field.AsBuffer {
-						templateKey = encodeAsBuffer
-						if field.AsString {
-							templateKey = encodeAsBufferString
-						}
-					} else {
-						templateKey = encodeStruct
-					}
+					templateKey = encodeStruct
 					break main
 				}
 				switch fieldTypeInfo.ComponentType {

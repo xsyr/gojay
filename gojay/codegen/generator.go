@@ -211,6 +211,16 @@ func (g *Generator) generateStructCode(structType string) error {
 	if _, hasCode := g.structTypes[structType]; hasCode {
 		return nil
 	}
+
+	var found bool
+	for _, t := range g.options.Types {
+		if t == structType {
+			found = true
+		}
+	}
+	if len(g.options.Types) > 0 && !found {
+		return nil
+	}
 	g.generatePool(structType)
 
 	aStruct := NewStruct(typeInfo, g)
