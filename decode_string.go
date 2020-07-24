@@ -13,6 +13,45 @@ func (dec *Decoder) DecodeString(v *string) error {
 	}
 	return dec.decodeString(v)
 }
+
+
+func (dec *Decoder) decodeBytesString() ([]byte, error) {
+	for ; dec.cursor < dec.length || dec.read(); dec.cursor++ {
+		switch dec.data[dec.cursor] {
+		case ' ', '\n', '\t', '\r', ',':
+			// is string
+			continue
+		case '"':
+			dec.cursor++
+			start, end, err := dec.getString()
+			if err != nil {
+				return nil, err
+			}
+			// we do minus one to remove the last quote
+			d := dec.data[start : end-1]
+			dec.cursor = end
+			return d, nil
+		// is nil
+		case 'n':
+			dec.cursor++
+			err := dec.assertNull()
+			if err != nil {
+				return nil, err
+			}
+			return nil, nil
+		default:
+			dec.err = dec.makeInvalidUnmarshalErr("[]byte")
+			err := dec.skipData()
+			if err != nil {
+				return nil, err
+			}
+			return nil, nil
+		}
+	}
+	return nil, nil
+}
+
+
 func (dec *Decoder) decodeString(v *string) error {
 	for ; dec.cursor < dec.length || dec.read(); dec.cursor++ {
 		switch dec.data[dec.cursor] {
@@ -234,6 +273,17 @@ func (dec *Decoder) AddString(v *string) error {
 // If a `null` is encountered, gojay does not change the value of the pointer.
 func (dec *Decoder) AddStringNull(v **string) error {
 	return dec.StringNull(v)
+}
+
+// String decodes the JSON value within an object or an array to a *string.
+// If next key is not a JSON string nor null, InvalidUnmarshalError will be returned.
+func (dec *Decoder) BytesString() ([]byte, error) {
+	val, err := dec.decodeBytesString()
+	if err != nil {
+		return val, err
+	}
+	dec.called |= 1
+	return val, nil
 }
 
 // String decodes the JSON value within an object or an array to a *string.

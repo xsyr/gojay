@@ -1,5 +1,13 @@
 package gojay
 
+import (
+	"reflect"
+	"unsafe"
+)
+
+func BytesToString(bs []byte) string {
+	return *(*string)(unsafe.Pointer(&bs))
+}
 
 type Buffer interface {
 	Bytes() []byte
@@ -17,14 +25,14 @@ func (enc *Encoder) BufferString(v Buffer) {
 	} else {
 		enc.writeByte('"')
 	}
-	enc.writeStringEscape(string(v.Bytes()))
+	enc.writeStringEscape(BytesToString(v.Bytes()))
 	enc.writeByte('"')
 }
 
 // BufferStringOmitEmpty adds a string to be encoded or skips it if it is zero value.
 // Must be used inside a slice or array encoding (does not encode a key)
 func (enc *Encoder) BufferStringOmitEmpty(v Buffer) {
-	if v == nil || v.Len() == 0 {
+	if v == nil || reflect.ValueOf(v).IsNil() || v.Len() == 0 {
 		return
 	}
 	r := enc.getPreviousRune()
@@ -33,7 +41,7 @@ func (enc *Encoder) BufferStringOmitEmpty(v Buffer) {
 	} else {
 		enc.writeByte('"')
 	}
-	enc.writeStringEscape(string(v.Bytes()))
+	enc.writeStringEscape(BytesToString(v.Bytes()))
 	enc.writeByte('"')
 }
 
@@ -41,7 +49,7 @@ func (enc *Encoder) BufferStringOmitEmpty(v Buffer) {
 // Must be used inside a slice or array encoding (does not encode a key)
 func (enc *Encoder) BufferStringNullEmpty(v Buffer) {
 	r := enc.getPreviousRune()
-	if v == nil || v.Len() == 0 {
+	if v == nil || reflect.ValueOf(v).IsNil() || v.Len() == 0 {
 		if r != '[' {
 			enc.writeByte(',')
 			enc.writeBytes(nullBytes)
@@ -55,7 +63,7 @@ func (enc *Encoder) BufferStringNullEmpty(v Buffer) {
 	} else {
 		enc.writeByte('"')
 	}
-	enc.writeStringEscape(string(v.Bytes()))
+	enc.writeStringEscape(BytesToString(v.Bytes()))
 	enc.writeByte('"')
 }
 
@@ -66,7 +74,7 @@ func (enc *Encoder) BufferStringKey(key string, v Buffer) {
 			return
 		}
 	}
-	if v != nil {
+	if v != nil && !reflect.ValueOf(v).IsNil() {
 		enc.grow(len(key) + v.Len() + 5)
 	} else {
 		enc.grow(len(key) + 5)
@@ -80,8 +88,8 @@ func (enc *Encoder) BufferStringKey(key string, v Buffer) {
 	}
 	enc.writeStringEscape(key)
 	enc.writeBytes(objKeyStr)
-	if v != nil {
-		enc.writeStringEscape(string(v.Bytes()))
+	if v != nil && !reflect.ValueOf(v).IsNil() {
+		enc.writeStringEscape(BytesToString(v.Bytes()))
 	}
 	enc.writeByte('"')
 }
@@ -94,7 +102,7 @@ func (enc *Encoder) BufferStringKeyOmitEmpty(key string, v Buffer) {
 			return
 		}
 	}
-	if v == nil || v.Len() == 0 {
+	if v == nil || reflect.ValueOf(v).IsNil() || v.Len() == 0 {
 		return
 	}
 	enc.grow(len(key) + v.Len() + 5)
@@ -106,7 +114,7 @@ func (enc *Encoder) BufferStringKeyOmitEmpty(key string, v Buffer) {
 	}
 	enc.writeStringEscape(key)
 	enc.writeBytes(objKeyStr)
-	enc.writeStringEscape(string(v.Bytes()))
+	enc.writeStringEscape(BytesToString(v.Bytes()))
 	enc.writeByte('"')
 }
 
@@ -118,7 +126,7 @@ func (enc *Encoder) BufferStringKeyNullEmpty(key string, v Buffer) {
 			return
 		}
 	}
-	if v != nil {
+	if v != nil && !reflect.ValueOf(v).IsNil()  {
 		enc.grow(len(key) + v.Len() + 5)
 	} else {
 		enc.grow(len(key) + 5)
@@ -131,13 +139,11 @@ func (enc *Encoder) BufferStringKeyNullEmpty(key string, v Buffer) {
 	}
 	enc.writeStringEscape(key)
 	enc.writeBytes(objKey)
-	if v == nil || v.Len() == 0 {
+	if v == nil || reflect.ValueOf(v).IsNil() || v.Len() == 0 {
 		enc.writeBytes(nullBytes)
 		return
 	}
 	enc.writeByte('"')
-	if v != nil {
-		enc.writeStringEscape(string(v.Bytes()))
-	}
+	enc.writeStringEscape(BytesToString(v.Bytes()))
 	enc.writeByte('"')
 }
