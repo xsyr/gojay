@@ -15,7 +15,7 @@ func (dec *Decoder) DecodeString(v *string) error {
 }
 
 
-func (dec *Decoder) decodeBytesString() ([]byte, error) {
+func (dec *Decoder) decodeBytesStringZC() ([]byte, error) {
 	for ; dec.cursor < dec.length || dec.read(); dec.cursor++ {
 		switch dec.data[dec.cursor] {
 		case ' ', '\n', '\t', '\r', ',':
@@ -277,13 +277,23 @@ func (dec *Decoder) AddStringNull(v **string) error {
 
 // String decodes the JSON value within an object or an array to a *string.
 // If next key is not a JSON string nor null, InvalidUnmarshalError will be returned.
-func (dec *Decoder) BytesString() ([]byte, error) {
-	val, err := dec.decodeBytesString()
+func (dec *Decoder) BytesStringZC() ([]byte, error) {
+	val, err := dec.decodeBytesStringZC()
 	if err != nil {
 		return val, err
 	}
 	dec.called |= 1
 	return val, nil
+}
+
+func (dec *Decoder) BytesString(v *[]byte) error {
+	val, err := dec.decodeBytesStringZC()
+	if err != nil {
+		return err
+	}
+	dec.called |= 1
+	*v = append(*v, val...)
+	return nil
 }
 
 // String decodes the JSON value within an object or an array to a *string.

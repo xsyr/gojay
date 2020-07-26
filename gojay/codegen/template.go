@@ -54,6 +54,9 @@ var fieldTemplate = map[int]string{
 	encodeBaseType: `    enc.{{.EncodingMethod}}Key{{.OmitEmpty}}("{{.Key}}", {{.DereferenceModifier}}{{.Accessor}})`,
 
 	encodeByteSliceAsString: `    enc.StringKey{{.OmitEmpty}}("{{.Key}}", string({{.DereferenceModifier}}{{.Accessor}}))`,
+	decodeByteSliceAsString: `		case "{{.Key}}":
+ 		return dec.BytesString(&{{.Accessor}})
+`,
 
 	decodeBaseTypeSlice: `		case "{{.Key}}":
 			var aSlice = {{.HelperType}}{}

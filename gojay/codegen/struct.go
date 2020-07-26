@@ -148,6 +148,9 @@ func (s *Struct) generateFieldDecoding(fields []*toolbox.FieldInfo) (string, []s
 			s.generatePrimitiveArray(field)
 		case "[]byte":
 			templateKey = decodeRawType
+			if field.AsString {
+				templateKey = decodeByteSliceAsString
+			}
 		default:
 
 			if field.AsBuffer {

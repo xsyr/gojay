@@ -109,6 +109,21 @@ func NewField(owner *Struct, field *toolbox.FieldInfo, fieldType *toolbox.TypeIn
 		result.OmitEmpty = "NullEmpty"
 	}
 
+
+	if owner.options.PoolObjects {
+		if field.IsPointer && !strings.HasSuffix(field.TypeName, ".Time") && !strings.Contains(field.TypeName, "sql.Null") {
+			poolName := getPoolName(field.TypeName)
+			result.Init = fmt.Sprintf(`%v.Get().(*%v)`, poolName, field.TypeName)
+		}
+	}
+
+	encodingMethod := field.ComponentType
+	if encodingMethod == "" {
+		encodingMethod = result.Type
+	}
+	result.DecodingMethod = firstLetterToUppercase(encodingMethod)
+	result.EncodingMethod = firstLetterToUppercase(encodingMethod)
+
 	result.AsString = strings.Contains(fieldTag, "string")
 	result.AsBuffer = strings.Contains(fieldTag, "buffer")
 	for _, opt := range strings.Split(fieldTag, ",") {
@@ -125,20 +140,6 @@ func NewField(owner *Struct, field *toolbox.FieldInfo, fieldType *toolbox.TypeIn
 			}
 		}
 	}
-
-	if owner.options.PoolObjects {
-		if field.IsPointer && !strings.HasSuffix(field.TypeName, ".Time") && !strings.Contains(field.TypeName, "sql.Null") {
-			poolName := getPoolName(field.TypeName)
-			result.Init = fmt.Sprintf(`%v.Get().(*%v)`, poolName, field.TypeName)
-		}
-	}
-
-	encodingMethod := field.ComponentType
-	if encodingMethod == "" {
-		encodingMethod = result.Type
-	}
-	result.DecodingMethod = firstLetterToUppercase(encodingMethod)
-	result.EncodingMethod = firstLetterToUppercase(encodingMethod)
 
 	switch typeName {
 	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
