@@ -296,6 +296,16 @@ func (dec *Decoder) BytesString(v *[]byte) error {
 	return nil
 }
 
+func (dec *Decoder) BytesString2(v []byte) ([]byte, error) {
+	val, err := dec.decodeBytesStringZC()
+	if err != nil {
+		return nil, err
+	}
+	dec.called |= 1
+	v = append(v, val...)
+	return v, nil
+}
+
 // String decodes the JSON value within an object or an array to a *string.
 // If next key is not a JSON string nor null, InvalidUnmarshalError will be returned.
 func (dec *Decoder) String(v *string) error {
