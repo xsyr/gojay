@@ -44,14 +44,13 @@ func (dec *Decoder) appendEscapeChar(str []byte, c byte) ([]byte, error) {
 	return str, nil
 }
 
-func (dec *Decoder) parseUnicode() ([]byte, error) {
+func (dec *Decoder) parseUnicode(str []byte) ([]byte, error) {
 	// get unicode after u
 	r, err := dec.getUnicode()
 	if err != nil {
 		return nil, err
 	}
 	// no error start making new string
-	str := make([]byte, 16, 16)
 	i := 0
 	// check if code can be a surrogate utf16
 	if utf16.IsSurrogate(r) {

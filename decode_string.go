@@ -154,7 +154,9 @@ func (dec *Decoder) parseEscapedString() error {
 	case 'u':
 		start := dec.cursor
 		dec.cursor++
-		str, err := dec.parseUnicode()
+
+		buf := make([]byte, 16, 16)
+		str, err := dec.parseUnicode(buf)
 		if err != nil {
 			return err
 		}
@@ -305,6 +307,7 @@ func (dec *Decoder) BytesString2(v []byte) ([]byte, error) {
 	v = append(v, val...)
 	return v, nil
 }
+
 
 // String decodes the JSON value within an object or an array to a *string.
 // If next key is not a JSON string nor null, InvalidUnmarshalError will be returned.
