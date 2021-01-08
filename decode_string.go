@@ -234,6 +234,9 @@ func (dec *Decoder) skipEscapedString() error {
 				}
 				return nil
 			}
+		} else {
+			dec.cursor = dec.cursor + 1
+			return nil
 		}
 	}
 	return dec.raiseInvalidJSONErr(dec.cursor)
